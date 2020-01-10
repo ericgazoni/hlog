@@ -46,7 +46,7 @@ def verify_record(record: Record, previous_hash: bytes, current_hash: bytes) -> 
 
 
 class Chain:
-    def __init__(self, root_hash: bytes = None, timezone: str = None):
+    def __init__(self, root_hash: bytes = None, timezone: str = "UTC"):
         self.records: List[Record] = []
         self.timezone = timezone
         if root_hash is None:
