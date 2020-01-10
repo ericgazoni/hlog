@@ -1,9 +1,9 @@
 import base64
-import arrow
+import arrow  # type: ignore
 import hashlib
 import json
 from collections import namedtuple
-from typing import Sequence
+from typing import Sequence, List
 from uuid import uuid4
 
 _Record = namedtuple("_Record", ("message", "timestamp", "hash"))
@@ -47,27 +47,27 @@ def verify_record(record: Record, previous_hash: bytes, current_hash: bytes) -> 
 
 class Chain:
     def __init__(self, root_hash: bytes = None, timezone: str = None):
-        self.records = []
+        self.records: List[Record] = []
         self.timezone = timezone
         if root_hash is None:
             self.root_hash = uuid4().bytes
         else:
             self.root_hash = root_hash
 
-    def append(self, **fields: Sequence[object]):
+    def append(self, **fields: Sequence[object]) -> bytes:
         if self.records:
             ph = self.records[-1].hash
         else:
             ph = self.root_hash
         rec = build_record(fields=fields, previous_hash=ph, timezone=self.timezone)
         self.records.append(rec)
-        return len(self.records), rec.hash
+        return rec.hash
 
-    def dump(self):
+    def dump(self) -> Sequence[bytes]:
         return [rec.dump() for rec in self.records]
 
     @classmethod
-    def from_dump(cls, records: list):
+    def from_dump(cls, records: Sequence[bytes]):
         c = Chain()
         for record in records:
             timestamp, hash, message = record.split(b" ")
@@ -76,7 +76,7 @@ class Chain:
             )
         return c
 
-    def verify(self, seq: int = None, hash: bytes = None, raise_on_error: bool = False):
+    def verify(self, seq: int = None, hash: bytes = None, raise_on_error: bool = False) -> bool:
         if seq is not None and hash is not None:
             if not self.records[seq].hash == hash:
                 if raise_on_error:
