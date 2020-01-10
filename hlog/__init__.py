@@ -3,7 +3,7 @@ import arrow  # type: ignore
 import hashlib
 import json
 from collections import namedtuple
-from typing import Sequence, List
+from typing import Sequence, List, Tuple
 from uuid import uuid4
 
 _Record = namedtuple("_Record", ("message", "timestamp", "hash"))
@@ -63,8 +63,8 @@ class Chain:
         self.records.append(rec)
         return rec.hash
 
-    def dump(self) -> Sequence[bytes]:
-        return [rec.dump() for rec in self.records]
+    def dump(self) -> Tuple[bytes]:
+        return tuple(rec.dump() for rec in self.records)
 
     @classmethod
     def from_dump(cls, records: Sequence[bytes]):
