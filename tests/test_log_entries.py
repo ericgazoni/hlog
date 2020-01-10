@@ -9,33 +9,33 @@ PRISTINE_CHAIN_HASH = b"\x1fXx\ts\xdb\x83\xcfn\xd4\xe2o\xcb\xf3\xb3)]\x11\xbf}\x
 
 @freeze_time(BASE_TIME)
 def test_record_generates_message_from_parts():
-    r = build_record(parts={"key1": "value1", "key2": "value2"}, previous_hash=b"")
+    r = build_record(fields={"key1": "value1", "key2": "value2"}, previous_hash=b"")
     assert r.message == b"eyJrZXkxIjogInZhbHVlMSIsICJrZXkyIjogInZhbHVlMiJ9"
 
 
 @freeze_time(BASE_TIME)
 def test_record_generates_hash_from_parts():
-    r = build_record(parts={"key1": "value1", "key2": "value2"}, previous_hash=b"0000")
+    r = build_record(fields={"key1": "value1", "key2": "value2"}, previous_hash=b"0000")
 
     assert r.hash == EXPECTED_HASH
 
 
 @freeze_time(BASE_TIME)
 def test_record_generates_hash_from_previous_hash():
-    r = build_record(parts={"key1": "value1", "key2": "value2"}, previous_hash=b"00000")
+    r = build_record(fields={"key1": "value1", "key2": "value2"}, previous_hash=b"00000")
     assert r.hash != EXPECTED_HASH
 
 
 @freeze_time("2012-08-26 00:05:30+00:03")
 def test_record_generates_hash_from_parts_and_timestamp():
-    r = build_record(parts={"key1": "value1", "key2": "value2"}, previous_hash=b"0000")
+    r = build_record(fields={"key1": "value1", "key2": "value2"}, previous_hash=b"0000")
     assert r.hash != EXPECTED_HASH
 
 
 @freeze_time(BASE_TIME)
 def test_record_generates_different_hash_from_different_parts():
-    r1 = build_record(parts={"key1": "value1", "key2": "value2"}, previous_hash=b"0000")
-    r2 = build_record(parts={"key1": "value1", "key2": "value1"}, previous_hash=b"0000")
+    r1 = build_record(fields={"key1": "value1", "key2": "value2"}, previous_hash=b"0000")
+    r2 = build_record(fields={"key1": "value1", "key2": "value1"}, previous_hash=b"0000")
 
     assert r1.hash != r2.hash
 

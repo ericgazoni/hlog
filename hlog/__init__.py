@@ -12,7 +12,11 @@ hf = hashlib.sha512
 
 class Record(_Record):
     def dump(self):
-        return b" ".join((self.timestamp, self.hash, self.message))
+        return b" ".join((self.timestamp, base64.b64encode(self.hash), self.message))
+
+    @property
+    def fields(self):
+        return json.loads(base64.b64decode(self.message).decode("utf-8"))
 
 
 def _hash(previous_hash, timestamp, message):
@@ -20,9 +24,9 @@ def _hash(previous_hash, timestamp, message):
     return hf(data).digest()
 
 
-def build_record(parts: dict, previous_hash: bytes) -> Record:
+def build_record(fields: dict, previous_hash: bytes) -> Record:
     timestamp = datetime.datetime.now().isoformat().encode("utf-8")
-    message = base64.b64encode(json.dumps(parts).encode("utf-8"))
+    message = base64.b64encode(json.dumps(fields).encode("utf-8"))
     hash = _hash(previous_hash, timestamp, message)
     return Record(message, timestamp, hash)
 
@@ -39,12 +43,12 @@ class Chain:
         else:
             self.root_hash = root_hash
 
-    def append(self, **parts: Sequence[object]):
+    def append(self, **fields: Sequence[object]):
         if self.records:
             ph = self.records[-1].hash
         else:
             ph = self.root_hash
-        rec = build_record(parts=parts, previous_hash=ph)
+        rec = build_record(fields=fields, previous_hash=ph)
         self.records.append(rec)
         return len(self.records), rec.hash
 
@@ -55,8 +59,10 @@ class Chain:
     def from_dump(cls, records: list):
         c = Chain()
         for record in records:
-            timestamp, hash, message = record[:19], record[20:84], record[85:]
-            c.records.append(Record(timestamp=timestamp, hash=hash, message=message))
+            timestamp, hash, message = record.split(b" ")
+            c.records.append(
+                Record(timestamp=timestamp, hash=base64.b64decode(hash), message=message)
+            )
         return c
 
     def verify(self, seq: int, hash: bytes):
