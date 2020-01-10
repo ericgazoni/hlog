@@ -1,9 +1,12 @@
-from uuid import uuid4
-import hashlib
+import base64
 import datetime
+import hashlib
+import json
 from collections import namedtuple
+from typing import Sequence
+from uuid import uuid4
 
-_Record = namedtuple("_Record", "message timestamp hash".split())
+_Record = namedtuple("_Record", ("message", "timestamp", "hash"))
 hf = hashlib.sha512
 
 
@@ -17,15 +20,14 @@ def _hash(previous_hash, timestamp, message):
     return hf(data).digest()
 
 
-def build_record(parts, previous_hash):
+def build_record(parts: dict, previous_hash: bytes) -> Record:
     timestamp = datetime.datetime.now().isoformat().encode("utf-8")
-    message = " ".join("=".join(item) for item in parts.items())
-    message = message.encode("utf-8")
+    message = base64.b64encode(json.dumps(parts).encode("utf-8"))
     hash = _hash(previous_hash, timestamp, message)
     return Record(message, timestamp, hash)
 
 
-def verify_record(record, previous_hash, current_hash):
+def verify_record(record: Record, previous_hash: bytes, current_hash: bytes) -> bool:
     return _hash(previous_hash, record.timestamp, record.message) == current_hash
 
 
@@ -37,7 +39,7 @@ class Chain:
         else:
             self.root_hash = root_hash
 
-    def append(self, **parts):
+    def append(self, **parts: Sequence[object]):
         if self.records:
             ph = self.records[-1].hash
         else:
@@ -50,14 +52,14 @@ class Chain:
         return [rec.dump() for rec in self.records]
 
     @classmethod
-    def from_dump(cls, records):
+    def from_dump(cls, records: list):
         c = Chain()
         for record in records:
             timestamp, hash, message = record[:19], record[20:84], record[85:]
             c.records.append(Record(timestamp=timestamp, hash=hash, message=message))
         return c
 
-    def verify(self, seq, hash):
+    def verify(self, seq: int, hash: bytes):
         if not self.records[seq].hash == hash:
             print("target record incorrect")
             return False
