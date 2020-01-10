@@ -116,3 +116,6 @@ def test_logs_can_be_stored_in_a_different_timezone():
     c2.append(message="hello world")
 
     assert c1.records[0].timestamp != c2.records[0].timestamp
+
+    assert c2.records[0].timestamp == b"2012-08-26T10:03:30+10:00"
+
