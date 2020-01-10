@@ -46,8 +46,9 @@ def verify_record(record: Record, previous_hash: bytes, current_hash: bytes) -> 
 
 
 class Chain:
-    def __init__(self, root_hash: bytes = None):
+    def __init__(self, root_hash: bytes = None, timezone: str = None):
         self.records = []
+        self.timezone = timezone
         if root_hash is None:
             self.root_hash = uuid4().bytes
         else:
@@ -58,7 +59,7 @@ class Chain:
             ph = self.records[-1].hash
         else:
             ph = self.root_hash
-        rec = build_record(fields=fields, previous_hash=ph)
+        rec = build_record(fields=fields, previous_hash=ph, timezone=self.timezone)
         self.records.append(rec)
         return len(self.records), rec.hash
 
