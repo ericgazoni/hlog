@@ -1,4 +1,7 @@
-# Principles
+# HashLog
+[![Coverage Status](https://coveralls.io/repos/github/ericgazoni/hlog/badge.svg?branch=master)](https://coveralls.io/github/ericgazoni/hlog?branch=master)
+
+## Principles
 
 
 - Records are immutable
