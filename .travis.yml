@@ -6,6 +6,6 @@ install:
 - pip install -r requirements-dev.txt
 - pip install -e .
 script:
-- pytest --cov=kirby --cov-report term-missing
+- pytest --cov=hlog --cov-report term-missing
 after_success:
 - coveralls
