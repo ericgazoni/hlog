@@ -1,5 +1,5 @@
 import base64
-import datetime
+import arrow
 import hashlib
 import json
 from collections import namedtuple
@@ -34,8 +34,8 @@ def _hash(previous_hash, timestamp, message):
     return hf(data).digest()
 
 
-def build_record(fields: dict, previous_hash: bytes) -> Record:
-    timestamp = datetime.datetime.now().isoformat().encode("utf-8")
+def build_record(fields: dict, previous_hash: bytes, timezone: str = None) -> Record:
+    timestamp = arrow.now(timezone).isoformat().encode("utf-8")
     message = base64.b64encode(json.dumps(fields).encode("utf-8"))
     hash = _hash(previous_hash, timestamp, message)
     return Record(message, timestamp, hash)
