@@ -32,7 +32,7 @@ def verify_record(record: Record, previous_hash: bytes, current_hash: bytes) -> 
 
 
 class Chain:
-    def __init__(self, root_hash=None):
+    def __init__(self, root_hash: bytes = None):
         self.records = []
         if root_hash is None:
             self.root_hash = uuid4().bytes
@@ -61,7 +61,6 @@ class Chain:
 
     def verify(self, seq: int, hash: bytes):
         if not self.records[seq].hash == hash:
-            print("target record incorrect")
             return False
 
         for idx, rec in enumerate(self.records[1:], start=1):
