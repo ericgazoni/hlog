@@ -14,3 +14,7 @@ def test_logging_actions():
     used_currencies = set(r.fields["currency"] for r in c2.records)
 
     assert used_currencies == {"EUR", "USD"}
+    assert c2.verify()
+
+
+

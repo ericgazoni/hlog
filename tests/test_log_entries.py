@@ -1,4 +1,5 @@
-from hlog import Chain, build_record
+from hlog import Chain, build_record, ModifiedRecordException
+import pytest
 from freezegun import freeze_time
 
 EXPECTED_HASH = b"\x1ajV\xfaN\xda\xbb\xbcr\x06|W\xa2\x10\x00S)\x91\xd5\x92\x9d\x04\x94\xf8\xe4-\x98\x9b\xadX\x92\x8c\xab\xc3\xfc\x8d\x7fy\xaejK}iZ\xa8\xed9\xba\x1b\xbe\xd0\\\xcd\x84h\xcc\xff\xd3\xbc\x88]\xfc=\x1e"
@@ -80,3 +81,27 @@ def test_log_entries_can_be_chained():
     c2 = Chain.from_dump(d)
 
     assert c2.verify(seq=2, hash=PRISTINE_CHAIN_HASH)
+
+
+@freeze_time(BASE_TIME)
+def test_chain_modification_can_be_explained():
+    c = Chain(root_hash=b"0000")
+    c.append(message="hello")
+    c.append(message="wonderful")
+    c.append(message="world")
+    save_r1 = c.records[1]
+    c.records[1] = build_record({"message": "good"}, previous_hash=c.records[0].hash)
+
+    with pytest.raises(ModifiedRecordException) as ex:
+        c.verify(raise_on_error=True)
+    exc = ex.value
+    assert exc.index == 2
+    assert exc.message
+    assert exc.record == c.records[2]
+
+    with pytest.raises(ModifiedRecordException) as ex:
+        c.verify(seq=1, hash=save_r1.hash, raise_on_error=True)
+    exc = ex.value
+    assert exc.index == 1
+    assert exc.message
+    assert exc.record == c.records[1]

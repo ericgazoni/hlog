@@ -10,6 +10,16 @@ _Record = namedtuple("_Record", ("message", "timestamp", "hash"))
 hf = hashlib.sha512
 
 
+class ModifiedRecordException(Exception):
+    def __init__(self, *args, **kwargs):
+        self.index = kwargs.pop("index")
+        self.record = kwargs.pop("record")
+        super().__init__(*args, **kwargs)
+        self.message = "Signature of record #{}, created on {} does not match its content".format(
+            self.index, self.record.timestamp
+        )
+
+
 class Record(_Record):
     def dump(self):
         return b" ".join((self.timestamp, base64.b64encode(self.hash), self.message))
@@ -65,12 +75,19 @@ class Chain:
             )
         return c
 
-    def verify(self, seq: int, hash: bytes):
-        if not self.records[seq].hash == hash:
-            return False
+    def verify(self, seq: int = None, hash: bytes = None, raise_on_error: bool = False):
+        if seq is not None and hash is not None:
+            if not self.records[seq].hash == hash:
+                if raise_on_error:
+                    raise ModifiedRecordException(index=seq, record=self.records[seq])
+                else:
+                    return False
 
         for idx, rec in enumerate(self.records[1:], start=1):
             if not verify_record(rec, self.records[idx - 1].hash, rec.hash):
-                return False
+                if raise_on_error:
+                    raise ModifiedRecordException(index=idx, record=rec)
+                else:
+                    return False
             ph = rec.hash
         return True
